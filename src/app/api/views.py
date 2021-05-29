@@ -1,4 +1,3 @@
-from typing import Collection
 from app.settings import BASE_URL
 from django.db.models.deletion import Collector
 from .serializers import *
@@ -6,12 +5,38 @@ from core.models import *
 from rest_framework import generics, request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.shortcuts import render
 from rest_framework.views import APIView
 
+
+class Auth(APIView):
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        try:
+            phone_number = request.data['phone_number']
+            #send code
+            return Response({'status': 'OK'}, status=HTTP_200_OK)
+        except Exception:
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
+
+
+class AuthCode(APIView):
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        try:
+            code = request.data['code']
+            if code == '1234':
+                return Response({'Token': 'b532f8fe87407fb3106ee68b0e4435acf43595fe'}, status=HTTP_200_OK)
+            return Response({'status': 'Bad Code'}, status=HTTP_200_OK)
+        except Exception:
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
+
+
 class GetCollectorsView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         try:
@@ -30,7 +55,7 @@ class GetCollectorsView(APIView):
 
 
 class GetUsersHistory(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         try:
@@ -48,11 +73,11 @@ class GetUsersHistory(APIView):
 
 
 class GetDetailedCollectorView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         try:
-            collector = Collector.objects.filter(pk=request.GET['id'])
+            collector = Collector.objects.get(id=request.GET['id'])
 
             try:
                 _image = BASE_URL + collector.photo.url
@@ -60,7 +85,7 @@ class GetDetailedCollectorView(APIView):
                 _image = None
 
             data = {
-                'id': collector.pk,
+                'id': collector.id,
                 'name': collector.name,
                 'lat': collector.lat,
                 'long': collector.long,
@@ -78,32 +103,35 @@ class GetDetailedCollectorView(APIView):
 
 
 class AddCollectorToFavourites(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         try:
-            collector = Collector.objects.filter(pk=request.GET['id'])
+            collector = Collector.objects.get(pk=request.GET['id'])
             if request.GET['action'] == 'add':
                 request.user.favourites.add(collector)
+                return Response({'status': 'OK'}, status=HTTP_200_OK)
             if request.GET['action'] == 'remove':
                 request.user.favourites.remove(collector)
-            else:
-                return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
-            return Response({'status': 'OK'}, status=HTTP_200_OK)
+                return Response({'status': 'OK'}, status=HTTP_200_OK)
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
 class GetFavouriteCollectors(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         try:
             data = []
-            for collector in Collector.objects.all():
-                for f in request.user.favourites():
-                    if collector == f:
-                        data.append({''})
+            for collector in request.user.favourites.all():
+                data.append({
+                    'id': collector.pk,
+                    'name': collector.name,
+                    'lat': collector.lat,
+                    'long': collector.long,
+                })
             return Response({'status': data}, status=HTTP_200_OK)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
@@ -119,3 +147,6 @@ class CreateContactView(generics.CreateAPIView):
     serializer_class = ContactSerializer
 
 
+class CreateVisitView(generics.CreateAPIView):
+    queryset = Visit.objects.all()
+    serializer_class = VisitSerializer

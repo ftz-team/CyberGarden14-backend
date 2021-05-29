@@ -35,11 +35,12 @@ class User(AbstractBaseUser):
 
     # required
     username = models.CharField(max_length=30, unique=True, blank=True)
-    email = models.EmailField(verbose_name="email", max_length=60, blank=True)
+    first_name = models.CharField(max_length=20, blank=True, null=True)
+    second_name = models.CharField(max_length=20, blank=True, null=True)
+    city = models.CharField(max_length=30, null=True, blank=True)
 
     # optional
     favourites = models.ManyToManyField('core.Collector', blank=True)
-
 
     # system
     last_login = models.DateTimeField(verbose_name='last login', auto_now=True)
@@ -78,7 +79,7 @@ class Collector(models.Model):
 
     @property
     def visited_count(self):
-        return len(Visit.objects.filter(collector=self))
+        return len(Visit.objects.filter(visit_collector=self))
 
 
 class Visit(models.Model):
