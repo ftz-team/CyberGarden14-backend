@@ -49,6 +49,10 @@ class User(AbstractBaseUser):
 
     # optional
     favourites = models.ManyToManyField('core.Collector', blank=True)
+    
+    @property
+    def visit_count(self):
+        len(Visit.objects.filter(user=self))
 
     # system
     last_login = models.DateTimeField(verbose_name='last login', auto_now=True)
@@ -102,3 +106,11 @@ class Visit(models.Model):
     visit_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     visit_collector = models.ForeignKey(Collector, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
+
+
+class VisitAchievement(models.Model):
+    header = models.CharField(max_length=30, null=True, blank=True)
+    description = models.TextField(max_length=150)
+    image = models.ImageField()
+    visit_amount = models.IntegerField()
+

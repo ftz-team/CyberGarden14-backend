@@ -15,13 +15,14 @@ class Auth(APIView):
     permission_classes = (AllowAny, )
 
     def post(self, request):
-        # try:
+        try:
             phone_number = request.data['phone_number']
-            user = User.objects.create_user(username=phone_number, password='secret')
-            user.save()
+            if User.objects.get(username=phone_number) is None:
+                user = User.objects.create_user(username=phone_number, password='secret')
+                user.save()
             
             return Response({'status': 'OK'}, status=HTTP_200_OK)
-        # except Exception:
+        except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
