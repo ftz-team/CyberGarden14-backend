@@ -1,3 +1,4 @@
+from rest_framework.authtoken.models import Token
 from app.settings import BASE_URL
 from django.db.models.deletion import Collector
 from .serializers import *
@@ -14,11 +15,13 @@ class Auth(APIView):
     permission_classes = (AllowAny, )
 
     def post(self, request):
-        try:
+        # try:
             phone_number = request.data['phone_number']
-            #send code
+            user = User.objects.create_user(username=phone_number, password='secret')
+            user.save()
+            
             return Response({'status': 'OK'}, status=HTTP_200_OK)
-        except Exception:
+        # except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
@@ -27,9 +30,11 @@ class AuthCode(APIView):
 
     def post(self, request):
         try:
+            phone_number = request.data['phone_number']
             code = request.data['code']
+            user = User.objects.get(username=phone_number)
             if code == '1234':
-                return Response({'Token': 'b532f8fe87407fb3106ee68b0e4435acf43595fe'}, status=HTTP_200_OK)
+                return Response({'Token': str(Token.objects.get(user = user))}, status=HTTP_200_OK)
             return Response({'status': 'Bad Code'}, status=HTTP_200_OK)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
