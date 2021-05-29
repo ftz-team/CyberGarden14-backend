@@ -40,15 +40,38 @@ class GetCollectorsView(APIView):
 
     def get(self, request):
         try:
-            collectors = Collector.objects.all()
+            type_filter = request.GET['type']
+
+            if type_filter == 'all':
+                collectors = Collector.objects.all()
+            else:
+                collectors = Collector.objects.filter(type=type_filter)
+
             data = []
             for collector in collectors:
+
+                try:
+                    _image = BASE_URL + collector.photo.url
+                except Exception:
+                    _image = None
+
+                is_liked = collector in request.user.favourites.all()
+
                 data.append({
-                    'id': collector.pk,
-                    'name': collector.name,
-                    'lat': collector.lat,
-                    'long': collector.long,
-                })
+                'id': collector.id,
+                'name': collector.name,
+                'lat': collector.lat,
+                'long': collector.long,
+                'photo': _image,
+                'description': collector.description,
+                'contact': {
+                    'phone_number': collector.collector_contact.phone_number,
+                    'email': collector.collector_contact.email,
+                },
+                'visited_count': collector.visited_count,
+                'type': collector.type,
+                'liked': is_liked,
+            })
             return Response({'data': data}, status=HTTP_200_OK)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
@@ -79,12 +102,17 @@ class GetDetailedCollectorView(APIView):
         try:
             collector = Collector.objects.get(id=request.GET['id'])
 
-            try:
-                _image = BASE_URL + collector.photo.url
-            except Exception:
-                _image = None
+            data = []
+            for collector in collectors:
 
-            data = {
+                try:
+                    _image = BASE_URL + collector.photo.url
+                except Exception:
+                    _image = None
+
+                is_liked = collector in request.user.favourites.all()
+
+                data.append({
                 'id': collector.id,
                 'name': collector.name,
                 'lat': collector.lat,
@@ -96,7 +124,9 @@ class GetDetailedCollectorView(APIView):
                     'email': collector.collector_contact.email,
                 },
                 'visited_count': collector.visited_count,
-            }
+                'type': collector.type,
+                'liked': is_liked,
+            })
             return Response({'data': data}, status=HTTP_200_OK)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)

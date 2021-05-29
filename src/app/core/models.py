@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
@@ -73,6 +74,14 @@ class Collector(models.Model):
     lat = models.FloatField(null=True, blank=True)
     long = models.FloatField(null=True, blank=True)    
     name = models.CharField(max_length=200)
+    TYPE_CHOICES = [
+        ('all', 'Общего назначения'),
+        ('plastic', 'Для пластика'),
+        ('glass', 'Для стекла'),
+        ('paper', 'Для бумаги'),
+        ('batteries', 'Для батареек')
+    ]
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES, blank=True, null=True)
     photo = models.ImageField()
     description = models.TextField()
     collector_contact = models.ForeignKey(Contact, on_delete=models.CASCADE, blank=True, null=True)
