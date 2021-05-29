@@ -75,7 +75,7 @@ class Collector(models.Model):
     long = models.FloatField(null=True, blank=True)    
     name = models.CharField(max_length=200)
     TYPE_CHOICES = [
-        ('all', 'Общего назначения'),
+        ('general', 'Общего назначения'),
         ('plastic', 'Для пластика'),
         ('glass', 'Для стекла'),
         ('paper', 'Для бумаги'),
