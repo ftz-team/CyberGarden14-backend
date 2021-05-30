@@ -50,6 +50,7 @@ class User(AbstractBaseUser):
     # optional
     favourites = models.ManyToManyField('core.Collector', blank=True)
     visit_achievements = models.ManyToManyField('core.VisitAchievement', blank=True)
+    achievements = models.ManyToManyField('core.Achievement', related_name='user_visit_achivements', blank=True)
     
     @property
     def visit_count(self):
@@ -123,3 +124,11 @@ class Promotion(models.Model):
     short_description = models.TextField(max_length=400)
     description = models.TextField(max_length=1000)
     image = models.ImageField()
+
+
+class Achievement(models.Model):
+    collector = models.ForeignKey(Collector, on_delete=models.CASCADE, null=True, blank=True)
+    header = models.CharField(max_length=30, null=True, blank=True)
+    description = models.TextField(max_length=150)
+    image = models.ImageField()
+    visit_amount = models.IntegerField()

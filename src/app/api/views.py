@@ -84,6 +84,7 @@ class GetCollectorsView(APIView):
                 'type': collector.type,
                 'liked': is_liked,
                 'adress': collector.address,
+                'is_offline': collector.is_offline,
             })
             return Response({'data': data}, status=HTTP_200_OK)
         except Exception:
@@ -260,43 +261,60 @@ class CreateVisit(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        try:
+        # try:
             visit = Visit.objects.create(
                 visit_user = request.user,
                 visit_collector = Collector.objects.get(pk=request.data['collector_id']),
             )
             visit.save()
-
-            to_next = 1
-            next_achievement_count = 0
-            achievements = list(VisitAchievement.objects.all().order_by('visit_amount'))
-            for i in range(1, len(achievements)):
-                if (request.user.visit_count >= achievements[i-1].visit_amount) and (request.user.visit_count < achievements[i].visit_amount):
-                    to_next = achievements[i].visit_amount - request.user.visit_count
-                    next_achievement_count = achievements[i].visit_amount
             
-            new_achievement = False
-            new_achievement_data = {}
-            user_visit_count = request.user.visit_count
+            if visit.visit_collector.is_offline == True:
+                a = Achievement.objects.all().get(collector=visit.visit_collector)
+                try:
+                    _image = BASE_URL + a.image.url
+                except Exception:
+                    _image = None
+                to_next = True
+                new_achievement = True
+                new_achievement_data = {
+                    'header': a.header,
+                    'description': a.description,
+                    'image': _image, 
+                    'visit_amount': a.visit_amount,
+                }
+                request.user.achievements.add(a)
+                return Response({'status': 'OK', 'type': 'offline', 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
+            else:
+                to_next = 1
+                next_achievement_count = 0
+                achievements = list(VisitAchievement.objects.all().order_by('visit_amount'))
+                for i in range(1, len(achievements)):
+                    if (request.user.visit_count >= achievements[i-1].visit_amount) and (request.user.visit_count < achievements[i].visit_amount):
+                        to_next = achievements[i].visit_amount - request.user.visit_count
+                        next_achievement_count = achievements[i].visit_amount
+                
+                new_achievement = False
+                new_achievement_data = {}
+                user_visit_count = request.user.visit_count
 
-            for i in achievements:
-                if request.user.visit_count == i.visit_amount:
+                for i in achievements:
+                    if request.user.visit_count == i.visit_amount:
 
-                    try:
-                        _image = BASE_URL + i.image.url
-                    except Exception:
-                        _image = None
+                        try:
+                            _image = BASE_URL + i.image.url
+                        except Exception:
+                            _image = None
 
-                    new_achievement = True
-                    new_achievement_data = {
-                        'header': i.header,
-                        'description': i.description,
-                        'image': _image, 
-                        'visit_amount': i.visit_amount,
-                    }
+                        new_achievement = True
+                        new_achievement_data = {
+                            'header': i.header,
+                            'description': i.description,
+                            'image': _image, 
+                            'visit_amount': i.visit_amount,
+                        }
 
-                    request.user.visit_achievements.add(i)
+                        request.user.visit_achievements.add(i)
 
-            return Response({'status': 'OK', 'to_next': to_next, 'user_visit_count': user_visit_count, 'next_achievement_count': next_achievement_count, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
-        except Exception:
+            return Response({'status': 'OK', 'type': 'online', 'to_next': to_next, 'user_visit_count': user_visit_count, 'next_achievement_count': next_achievement_count, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
+        # except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
