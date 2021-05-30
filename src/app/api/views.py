@@ -45,7 +45,7 @@ class GetCollectorsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        # try:
+        try:
             type_filter = request.GET['type']
             is_offline = request.GET['is_offline']
 
@@ -58,6 +58,8 @@ class GetCollectorsView(APIView):
             
             if is_offline == 'true':
                 collectors = collectors.filter(is_offline=True)
+            if is_offline == 'false':
+                collectors = collectors.filter(is_offline=False)
 
             data = []
             for collector in collectors:
@@ -86,7 +88,7 @@ class GetCollectorsView(APIView):
                 'adress': collector.address,
             })
             return Response({'data': data}, status=HTTP_200_OK)
-        # except Exception:
+        except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
@@ -206,6 +208,28 @@ class GetFavouriteCollectors(APIView):
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
+class GetUsersAchievements(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            data = []
+            for a in request.user.visit_achievements.all():
+                try:
+                    _image = BASE_URL + a.image.url
+                except Exception:
+                    _image = None
+                data.append({
+                        'header': a.header,
+                        'description': a.description,
+                        'image': _image, 
+                        'visit_amount': a.visit_amount,
+                    })
+            return Response({'status': data}, status=HTTP_200_OK)
+        except Exception:
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
+
+
 class GetPromotions(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -272,6 +296,8 @@ class CreateVisit(APIView):
                         'image': _image, 
                         'visit_amount': i.visit_amount,
                     }
+
+                    request.user.visit_achievements.add(i)
 
             return Response({'status': 'OK', 'to_next': to_next, 'user_visit_count': user_visit_count, 'next_achievement_count': next_achievement_count, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
         except Exception:

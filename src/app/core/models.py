@@ -49,6 +49,7 @@ class User(AbstractBaseUser):
 
     # optional
     favourites = models.ManyToManyField('core.Collector', blank=True)
+    visit_achievements = models.ManyToManyField('core.VisitAchievement', blank=True)
     
     @property
     def visit_count(self):

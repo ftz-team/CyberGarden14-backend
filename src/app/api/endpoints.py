@@ -25,5 +25,7 @@ api_urls = [
     
     path('users_history/get', GetUsersHistory.as_view(), name='get_users_history'),
     path('promotion/get', GetPromotions.as_view(), name='get_promo'),
+
+    path('achivements/get', GetUsersAchievements.as_view(), name='get_achievements'),
 ]
 
