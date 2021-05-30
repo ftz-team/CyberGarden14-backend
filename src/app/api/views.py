@@ -45,8 +45,9 @@ class GetCollectorsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        try:
+        # try:
             type_filter = request.GET['type']
+            is_offline = request.GET['is_offline']
 
             if type_filter == 'favourites':
                 collectors = request.user.favourites.all()
@@ -54,6 +55,9 @@ class GetCollectorsView(APIView):
                 collectors = Collector.objects.all()
             else:
                 collectors = Collector.objects.filter(type=type_filter)
+            
+            if is_offline == 'true':
+                collectors = collectors.filter(is_offline=True)
 
             data = []
             for collector in collectors:
@@ -82,7 +86,7 @@ class GetCollectorsView(APIView):
                 'adress': collector.address,
             })
             return Response({'data': data}, status=HTTP_200_OK)
-        except Exception:
+        # except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 
 
@@ -93,7 +97,6 @@ class GetUsersHistory(APIView):
         try:
             history = Visit.objects.filter(visit_user=request.user)
             data = []
-            data_collector = []
             for visit in history:
                 try:
                     _image = BASE_URL + visit.visit_collector.photo.url
@@ -102,7 +105,7 @@ class GetUsersHistory(APIView):
 
                 is_liked = visit.visit_collector in request.user.favourites.all()
 
-                data_collector.append({
+                data_collector = {
                     'id': visit.visit_collector.id,
                     'name': visit.visit_collector.name,
                     'lat': visit.visit_collector.lat,
@@ -117,7 +120,9 @@ class GetUsersHistory(APIView):
                     'type': visit.visit_collector.type,
                     'liked': is_liked,
                     'adress': visit.visit_collector.address,
-                })
+                }
+
+                print('ХУЙ')
 
                 data.append({
                     'id': visit.pk,
@@ -197,6 +202,24 @@ class GetFavouriteCollectors(APIView):
                     'long': collector.long,
                 })
             return Response({'status': data}, status=HTTP_200_OK)
+        except Exception:
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
+
+
+class GetPromotions(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            data = []
+            for promo in Promotion.objects.all():
+                data.append({
+                    'id': promo.pk,
+                    'header': promo.header,
+                    'short_description': promo.short_description,
+                    'description': promo.description,
+                })
+            return Response({'data': data}, status=HTTP_200_OK)
         except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
 

@@ -97,6 +97,7 @@ class Collector(models.Model):
     address = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField()
     collector_contact = models.ForeignKey(Contact, on_delete=models.CASCADE, blank=True, null=True)
+    is_offline = models.BooleanField(blank=True, null=True)
 
     @property
     def visited_count(self):
@@ -115,3 +116,9 @@ class VisitAchievement(models.Model):
     image = models.ImageField()
     visit_amount = models.IntegerField()
 
+
+class Promotion(models.Model):
+    header = models.CharField(max_length=30, null=True, blank=True)
+    short_description = models.TextField(max_length=400)
+    description = models.TextField(max_length=1000)
+    image = models.ImageField()
