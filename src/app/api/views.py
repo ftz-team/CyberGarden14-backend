@@ -48,6 +48,8 @@ class GetCollectorsView(APIView):
         try:
             type_filter = request.GET['type']
 
+            if type_filter == 'favourites':
+                collectors = request.user.favourites.all()
             if type_filter == 'all':
                 collectors = Collector.objects.all()
             else:
@@ -90,10 +92,34 @@ class GetUsersHistory(APIView):
         try:
             history = Visit.objects.filter(visit_user=request.user)
             data = []
+            data_collector = []
             for visit in history:
+                try:
+                    _image = BASE_URL + visit.visit_collector.photo.url
+                except Exception:
+                    _image = None
+
+                is_liked = visit.visit_collector in request.user.favourites.all()
+
+                data_collector.append({
+                    'id': visit.visit_collector.id,
+                    'name': visit.visit_collector.name,
+                    'lat': visit.visit_collector.lat,
+                    'long': visit.visit_collector.long,
+                    'photo': _image,
+                    'description': visit.visit_collector.description,
+                    'contact': {
+                        'phone_number': visit.visit_collector.collector_contact.phone_number,
+                        'email': visit.visit_collector.collector_contact.email,
+                    },
+                    'visited_count': visit.visit_collector.visited_count,
+                    'type': visit.visit_collector.type,
+                    'liked': is_liked,
+                })
+
                 data.append({
                     'id': visit.pk,
-                    'collector': visit.visit_collector.pk,
+                    'collector': data_collector,
                     'date': visit.date,
                 })
             return Response({'data': data}, status=HTTP_200_OK)
@@ -183,6 +209,22 @@ class CreateContactView(generics.CreateAPIView):
     serializer_class = ContactSerializer
 
 
-class CreateVisitView(generics.CreateAPIView):
-    queryset = Visit.objects.all()
-    serializer_class = VisitSerializer
+# class CreateVisit(APIView):
+#     permission_classes = (IsAuthenticated,)
+
+#     def post(self, request):
+#         try:
+#             visit = Visit.objects.create(
+#                 visit_user = request.user,
+#                 visit_collector = request.data['collector_id'],
+#             )
+#             visit.save()
+
+#             for v in VisitAchievement.objects.all():
+#                 if request.user.visited_count < v.visit_amount:
+#                     need_visits_count = v.visit_amount - request.user.visited_amount
+#                 if 
+
+#             return Response({'status': 'OK',}, status=HTTP_200_OK)
+#         except Exception:
+#             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)

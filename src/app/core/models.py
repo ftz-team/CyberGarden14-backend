@@ -52,7 +52,7 @@ class User(AbstractBaseUser):
     
     @property
     def visit_count(self):
-        len(Visit.objects.filter(user=self))
+        len(Visit.objects.filter(visit_user=self))
 
     # system
     last_login = models.DateTimeField(verbose_name='last login', auto_now=True)
@@ -94,6 +94,7 @@ class Collector(models.Model):
     ]
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, blank=True, null=True)
     photo = models.ImageField()
+    address = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField()
     collector_contact = models.ForeignKey(Contact, on_delete=models.CASCADE, blank=True, null=True)
 

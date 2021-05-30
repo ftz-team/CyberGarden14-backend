@@ -20,7 +20,7 @@ api_urls = [
 
     path('contact/create', CreateContactView.as_view(), name='create_contact'),
 
-    path('visit/create', CreateVisitView.as_view(), name='create_visit'),
+    # path('visit/create', CreateVisitView.as_view(), name='create_visit'),
     path('visit/history', GetUsersHistory.as_view(), name='users_history'),
     
     path('users_history/get', GetUsersHistory.as_view(), name='get_users_history'),
