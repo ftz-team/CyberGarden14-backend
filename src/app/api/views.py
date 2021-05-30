@@ -215,7 +215,7 @@ class CreateVisit(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        # try:
+        try:
             visit = Visit.objects.create(
                 visit_user = request.user,
                 visit_collector = Collector.objects.get(pk=request.data['collector_id']),
@@ -251,5 +251,5 @@ class CreateVisit(APIView):
                     }
 
             return Response({'status': 'OK', 'to_next': to_next, 'user_visit_count': user_visit_count, 'next_achievement_count': next_achievement_count, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
-        # except Exception:
+        except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
