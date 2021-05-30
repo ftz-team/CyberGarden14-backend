@@ -58,8 +58,6 @@ class GetCollectorsView(APIView):
             
             if is_offline == 'true':
                 collectors = collectors.filter(is_offline=True)
-            if is_offline == 'false':
-                collectors = collectors.filter(is_offline=False)
 
             data = []
             for collector in collectors:
