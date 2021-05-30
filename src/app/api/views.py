@@ -222,23 +222,34 @@ class CreateVisit(APIView):
             )
             visit.save()
 
-            achievements = list(VisitAchievement.objects.all())
+            to_next = 1
+            next_achievement_count = 0
+            achievements = list(VisitAchievement.objects.all().order_by('visit_amount'))
             for i in range(1, len(achievements)):
                 if (request.user.visit_count >= achievements[i-1].visit_amount) and (request.user.visit_count < achievements[i].visit_amount):
                     to_next = achievements[i].visit_amount - request.user.visit_count
+                    next_achievement_count = achievements[i].visit_amount
             
             new_achievement = False
             new_achievement_data = {}
+            user_visit_count = request.user.visit_count
+
             for i in achievements:
                 if request.user.visit_count == i.visit_amount:
+
+                    try:
+                        _image = BASE_URL + i.image.url
+                    except Exception:
+                        _image = None
+
                     new_achievement = True
                     new_achievement_data = {
-                        'haeder': i.header,
+                        'header': i.header,
                         'description': i.description,
-                        'image': i.image, 
+                        'image': _image, 
                         'visit_amount': i.visit_amount,
                     }
 
-            return Response({'status': 'OK', 'to_next': to_next, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
+            return Response({'status': 'OK', 'to_next': to_next, 'user_visit_count': user_visit_count, 'next_achievement_count': next_achievement_count, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
         # except Exception:
             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)

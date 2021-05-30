@@ -52,7 +52,7 @@ class User(AbstractBaseUser):
     
     @property
     def visit_count(self):
-        len(Visit.objects.filter(visit_user=self))
+        return len(Visit.objects.filter(visit_user=self))
 
     # system
     last_login = models.DateTimeField(verbose_name='last login', auto_now=True)
