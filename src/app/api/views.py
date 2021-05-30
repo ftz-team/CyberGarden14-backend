@@ -79,6 +79,7 @@ class GetCollectorsView(APIView):
                 'visited_count': collector.visited_count,
                 'type': collector.type,
                 'liked': is_liked,
+                'adress': collector.address,
             })
             return Response({'data': data}, status=HTTP_200_OK)
         except Exception:
@@ -115,6 +116,7 @@ class GetUsersHistory(APIView):
                     'visited_count': visit.visit_collector.visited_count,
                     'type': visit.visit_collector.type,
                     'liked': is_liked,
+                    'adress': visit.visit_collector.address,
                 })
 
                 data.append({
@@ -209,22 +211,34 @@ class CreateContactView(generics.CreateAPIView):
     serializer_class = ContactSerializer
 
 
-# class CreateVisit(APIView):
-#     permission_classes = (IsAuthenticated,)
+class CreateVisit(APIView):
+    permission_classes = (IsAuthenticated,)
 
-#     def post(self, request):
-#         try:
-#             visit = Visit.objects.create(
-#                 visit_user = request.user,
-#                 visit_collector = request.data['collector_id'],
-#             )
-#             visit.save()
+    def post(self, request):
+        # try:
+            visit = Visit.objects.create(
+                visit_user = request.user,
+                visit_collector = Collector.objects.get(pk=request.data['collector_id']),
+            )
+            visit.save()
 
-#             for v in VisitAchievement.objects.all():
-#                 if request.user.visited_count < v.visit_amount:
-#                     need_visits_count = v.visit_amount - request.user.visited_amount
-#                 if 
+            achievements = list(VisitAchievement.objects.all())
+            for i in range(1, len(achievements)):
+                if (request.user.visit_count >= achievements[i-1].visit_amount) and (request.user.visit_count < achievements[i].visit_amount):
+                    to_next = achievements[i].visit_amount - request.user.visit_count
+            
+            new_achievement = False
+            new_achievement_data = {}
+            for i in achievements:
+                if request.user.visit_count == i.visit_amount:
+                    new_achievement = True
+                    new_achievement_data = {
+                        'haeder': i.header,
+                        'description': i.description,
+                        'image': i.image, 
+                        'visit_amount': i.visit_amount,
+                    }
 
-#             return Response({'status': 'OK',}, status=HTTP_200_OK)
-#         except Exception:
-#             return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
+            return Response({'status': 'OK', 'to_next': to_next, 'new_achievement': new_achievement, 'new_achievement_data': new_achievement_data}, status=HTTP_200_OK)
+        # except Exception:
+            return Response({'status': 'Bad Request'}, status=HTTP_400_BAD_REQUEST)
